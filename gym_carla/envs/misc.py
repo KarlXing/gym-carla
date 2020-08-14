@@ -249,3 +249,5 @@ def rgb_to_display_surface(rgb, display_size):
   pygame.surfarray.blit_array(surface, display)
   return surface
 
+def get_location(loc):
+    return [loc.x, loc.y, loc.z+1]

@@ -51,11 +51,11 @@ class CarlaEnv(gym.Env):
     else:
       self.pixor = False
 
-    # Destination
-    if params['task_mode'] == 'roundabout':
-      self.dests = [[4.46, -61.46, 0], [-49.53, -2.89, 0], [-6.48, 55.47, 0], [35.96, 3.33, 0]]
-    else:
-      self.dests = None
+    # updated carla_env
+    self.start_point = params['start_point']
+    self.end_point = params['end_point']
+    self.dests = [self.end_point]
+    self.weather = params['weather']
 
     # action and observation spaces
     self.discrete = params['discrete']
@@ -91,7 +91,7 @@ class CarlaEnv(gym.Env):
     print('Carla server connected!')
 
     # Set weather
-    self.world.set_weather(carla.WeatherParameters.ClearNoon)
+    self.world.set_weather(self.weather)
 
     # Get spawn points
     self.vehicle_spawn_points = list(self.world.get_map().get_spawn_points())
@@ -195,21 +195,21 @@ class CarlaEnv(gym.Env):
 
     # Spawn the ego vehicle
     ego_spawn_times = 0
-    while True:
-      if ego_spawn_times > self.max_ego_spawn_times:
-        self.reset()
+    
+    transform = self.world.get_map().get_waypoint(carla.Location(*self.start_point)).transform
+    transform.location = carla.Location(*get_location(transform.location))
+    assert(self._try_spawn_ego_vehicle_at(transform))
+    
+    # while True:
+    #   if ego_spawn_times > self.max_ego_spawn_times:
+    #     self.reset()
 
-      if self.task_mode == 'random':
-        transform = random.choice(self.vehicle_spawn_points)
-      if self.task_mode == 'roundabout':
-        self.start=[52.1+np.random.uniform(-5,5),-4.2, 178.66] # random
-        # self.start=[52.1,-4.2, 178.66] # static
-        transform = set_carla_transform(self.start)
-      if self._try_spawn_ego_vehicle_at(transform):
-        break
-      else:
-        ego_spawn_times += 1
-        time.sleep(0.1)
+    #   waypoint = self.world.get_map().get_waypoint(carla.Location(*self.start_point))
+      # if self._try_spawn_ego_vehicle_at(waypoint.transform):
+      #   break
+      # else:
+      #   ego_spawn_times += 1
+      #   time.sleep(0.1)
 
     # Add collision sensor
     self.collision_sensor = self.world.spawn_actor(self.collision_bp, carla.Transform(), attach_to=self.ego)
@@ -406,18 +406,18 @@ class CarlaEnv(gym.Env):
     vehicle = None
     # Check if ego position overlaps with surrounding vehicles
     overlap = False
-    for idx, poly in self.vehicle_polygons[-1].items():
-      poly_center = np.mean(poly, axis=0)
-      ego_center = np.array([transform.location.x, transform.location.y])
-      dis = np.linalg.norm(poly_center - ego_center)
-      if dis > 8:
-        continue
-      else:
-        overlap = True
-        break
+    # for idx, poly in self.vehicle_polygons[-1].items():
+    #   poly_center = np.mean(poly, axis=0)
+    #   ego_center = np.array([transform.location.x, transform.location.y])
+    #   dis = np.linalg.norm(poly_center - ego_center)
+    #   if dis > 8:
+    #     continue
+    #   else:
+    #     overlap = True
+    #     break
 
     if not overlap:
-      vehicle = self.world.try_spawn_actor(self.ego_bp, transform)
+      vehicle = self.world.spawn_actor(self.ego_bp, transform)
 
     if vehicle is not None:
       self.ego=vehicle
@@ -667,3 +667,7 @@ class CarlaEnv(gym.Env):
           if actor.type_id == 'controller.ai.walker':
             actor.stop()
           actor.destroy()
+
+  def update_start_point(self, start_point):
+    print('new start_point', start_point)
+    self.start_point = start_point
