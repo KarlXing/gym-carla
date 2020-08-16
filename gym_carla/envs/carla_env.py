@@ -34,7 +34,7 @@ class CarlaEnv(gym.Env):
     self.number_of_vehicles = params['number_of_vehicles']
     self.number_of_walkers = params['number_of_walkers']
     self.dt = params['dt']
-    self.task_mode = params['task_mode']
+    # self.task_mode = params['task_mode']
     self.max_time_episode = params['max_time_episode']
     self.max_waypt = params['max_waypt']
     self.obs_range = params['obs_range']
@@ -85,7 +85,7 @@ class CarlaEnv(gym.Env):
 
     # Connect to carla server and get world object
     print('connecting to Carla server...')
-    client = carla.Client('localhost', params['port'])
+    client = carla.Client(params['ip'], params['port'])
     client.set_timeout(10.0)
     self.world = client.load_world(params['town'])
     print('Carla server connected!')
