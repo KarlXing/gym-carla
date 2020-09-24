@@ -56,6 +56,7 @@ class CarlaEnv(gym.Env):
     self.end_point = params['end_point']
     self.dests = [self.end_point]
     self.weather = params['weather']
+    self.collision_coef = 0
 
     # action and observation spaces
     self.discrete = params['discrete']
@@ -629,7 +630,7 @@ class CarlaEnv(gym.Env):
     # cost for lateral acceleration
     r_lat = - abs(self.ego.get_control().steer) * lspeed_lon**2
 
-    r = 200*r_collision + 1*lspeed_lon + 10*r_fast + 1*r_out + r_steer*5 + 0.2*r_lat - 0.1
+    r = self.collision_coef*r_collision + 1*lspeed_lon + 10*r_fast + 1*r_out + r_steer*5 + 0.2*r_lat - 0.1
 
     return r
 
