@@ -13,7 +13,7 @@ $ conda activate env_name
 
 2. Clone this git repo in an appropriate folder
 ```
-$ git clone https://github.com/cjy1992/gym-carla.git
+$ git clone https://github.com/karlxing/gym-carla.git
 ```
 
 3. Enter the repo root folder and install the packages:
